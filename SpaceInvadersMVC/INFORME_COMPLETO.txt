@@ -1,0 +1,1289 @@
+================================================================================
+                     SPACE INVADERS MVC - INFORME TÉCNICO
+================================================================================
+
+PROYECTO: Space Invaders
+ARQUITECTURA: Model-View-Controller (MVC)
+LENGUAJE: Java
+FRAMEWORK GUI: Swing
+AUTOR: Sistema de desarrollo
+FECHA: 2025-11-19
+
+================================================================================
+                          ÍNDICE
+================================================================================
+
+1. DESCRIPCIÓN GENERAL DEL JUEGO
+2. ARQUITECTURA MVC
+3. ESTRUCTURA DEL PROYECTO
+4. PAQUETE MODELO (modelo)
+5. PAQUETE VISTA (vista)
+6. PAQUETE CONTROLADOR (controlador)
+7. PAQUETE PRINCIPAL (principal)
+8. FLUJO DEL JUEGO
+9. CARACTERÍSTICAS PRINCIPALES
+10. SISTEMA DE DIFICULTAD
+11. SISTEMA DE RANKING
+12. COMPILACIÓN Y EJECUCIÓN
+
+================================================================================
+                    1. DESCRIPCIÓN GENERAL DEL JUEGO
+================================================================================
+
+Space Invaders es un juego de arcade clásico implementado en Java Swing
+siguiendo estrictamente el patrón arquitectónico Model-View-Controller (MVC).
+
+OBJETIVO:
+- Destruir oleadas de invasores alienígenas antes de que alcancen la nave
+- Proteger cuatro muros de energía
+- Obtener el puntaje más alto posible
+
+CONTROLES:
+- FLECHA IZQUIERDA: Mover nave a la izquierda
+- FLECHA DERECHA: Mover nave a la derecha
+- ESPACIO: Disparar
+
+MECÁNICAS:
+- Los invasores se mueven de lado a lado y bajan gradualmente
+- Los invasores disparan proyectiles hacia el jugador
+- Los muros protegen parcialmente a la nave pero reciben daño
+- Al eliminar todos los invasores, se avanza de nivel
+- La velocidad aumenta con cada nivel
+
+================================================================================
+                        2. ARQUITECTURA MVC
+================================================================================
+
+El proyecto sigue ESTRICTAMENTE el patrón MVC con las siguientes reglas:
+
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│    VIEW (Vista)          CONTROLLER (Controlador)          │
+│         │                        │                          │
+│         │  1. Eventos UI         │                          │
+│         │───────────────────────>│                          │
+│         │                        │  2. Actualiza           │
+│         │                        │────────────────>MODEL    │
+│         │                        │                 (Modelo) │
+│         │  4. Notificación       │                   │      │
+│         │<───────────────────────────────────────────┘      │
+│         │     (Observer)                                    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+
+REGLAS DE SEPARACIÓN:
+1. View NO conoce Model directamente
+2. Controller NO conoce View directamente
+3. Model notifica cambios vía patrón Observer
+4. Model NO conoce ni View ni Controller
+
+VENTAJAS:
+- Separación clara de responsabilidades
+- Fácil mantenimiento y testing
+- Escalabilidad del código
+- Reutilización de componentes
+
+
+================================================================================
+                    3. ESTRUCTURA DEL PROYECTO
+================================================================================
+
+SpaceInvadersMVC/
+│
+├── src/
+│   ├── modelo/              (11 clases) - Lógica del juego
+│   ├── vista/               (13 clases) - Interfaz gráfica
+│   ├── controlador/         (1 clase)   - Mediador MVC
+│   ├── principal/           (2 clases)   - Punto de entrada
+│   ├── Muro.png             - Imagen de muros
+│   ├── Navecita2.png        - Imagen de nave jugador
+│   └── naveAliens.png       - Imagen de invasores
+│
+├── bin/                     - Archivos compilados (.class)
+├── ranking.dat              - Datos persistentes del ranking
+└── SpaceInvadersMVC.jar     - Ejecutable del juego
+
+TOTAL: 27 clases Java organizadas en 4 paquetes
+
+
+================================================================================
+                      4. PAQUETE MODELO (modelo)
+================================================================================
+
+El paquete modelo contiene TODA la lógica del juego. No tiene dependencias
+de la vista ni del controlador.
+
+┌────────────────────────────────────────────────────────────────┐
+│                    JERARQUÍA DE CLASES                         │
+└────────────────────────────────────────────────────────────────┘
+
+    ObjetoJuego (abstracta)
+         │
+         ├── ObjetoJuegoActualizable (abstracta)
+         │        │
+         │        ├── Invasor
+         │        └── Rayo
+         │
+         ├── NaveJugador
+         └── Muro
+
+
+4.1. ObjetoJuego.java
+─────────────────────
+DESCRIPCIÓN:
+Clase abstracta base para todos los objetos del juego.
+
+RESPONSABILIDADES:
+- Mantener posición (x, y)
+- Mantener dimensiones (ancho, alto)
+- Mantener velocidad
+- Definir límites del área de juego
+- Notificar cambios vía patrón Observer
+
+ATRIBUTOS PRINCIPALES:
+- protected int x, y: Posición del objeto
+- protected int ancho, alto: Dimensiones
+- protected int velocidad: Velocidad de movimiento
+- protected int limiteX, limiteY: Límites del área
+- protected Observador observador: Observer para notificar vista
+
+MÉTODOS CLAVE:
+- void mover(int dx, int dy): Mueve el objeto
+- void notificarCambio(): Notifica cambios al observador
+- getX(), getY(), getAncho(), getAlto(): Getters de posición/tamaño
+
+
+4.2. ObjetoJuegoActualizable.java
+──────────────────────────────────
+DESCRIPCIÓN:
+Clase abstracta para objetos que se actualizan automáticamente cada frame.
+
+RESPONSABILIDADES:
+- Definir contrato para actualización automática
+- Gestionar estado activo/inactivo
+
+MÉTODOS ABSTRACTOS:
+- void actualizarPosicion(): Lógica de actualización (implementada por subclases)
+
+ATRIBUTOS:
+- protected boolean activo: Indica si el objeto está activo
+
+
+4.3. NaveJugador.java
+─────────────────────
+DESCRIPCIÓN:
+Representa la nave del jugador controlada por el usuario.
+
+RESPONSABILIDADES:
+- Mover izquierda/derecha dentro de los límites
+- Disparar proyectiles
+- Gestionar vida (100 HP)
+- Notificar cuando es destruida
+
+ATRIBUTOS:
+- private int vida: Puntos de vida (0-100)
+- private static final int VIDA_MAXIMA = 100
+
+MÉTODOS PRINCIPALES:
+- void moverDerecha(): Mueve la nave a la derecha
+- void moverIzquierda(): Mueve la nave a la izquierda
+- Rayo disparar(): Crea y retorna un nuevo rayo
+- void recibirDano(int cantidad): Reduce la vida
+- boolean isDestruido(): Verifica si vida <= 0
+- void reiniciarVida(): Restaura vida al máximo
+
+
+4.4. Invasor.java
+─────────────────
+DESCRIPCIÓN:
+Representa un invasor alienígena enemigo.
+
+RESPONSABILIDADES:
+- Moverse automáticamente
+- Disparar proyectiles enemigos aleatoriamente
+- Ser destruible
+
+MÉTODOS PRINCIPALES:
+- void actualizarPosicion(): Movimiento automático (vertical descendente)
+- Rayo disparar(): Crea rayo enemigo (hacia abajo)
+- void destruir(): Marca como inactivo y notifica vista
+
+
+4.5. Rayo.java
+──────────────
+DESCRIPCIÓN:
+Representa un proyectil (del jugador o enemigo).
+
+RESPONSABILIDADES:
+- Moverse verticalmente (arriba o abajo según origen)
+- Detectar cuando sale de pantalla
+- Distinguir entre rayo jugador y rayo enemigo
+
+ATRIBUTOS:
+- private boolean enemigo: true si es disparo enemigo
+- private int direccion: 1 o -1 (arriba/abajo)
+
+MÉTODOS PRINCIPALES:
+- void actualizarPosicion(): Mueve el rayo verticalmente
+- boolean isEnemigo(): Retorna si es rayo enemigo
+- void destruir(): Marca como inactivo
+
+
+4.6. Muro.java
+──────────────
+DESCRIPCIÓN:
+Representa un muro de energía protector ("tronera").
+
+RESPONSABILIDADES:
+- Recibir daño de rayos e invasores
+- Destruirse cuando vida llega a 0
+- Poder ser restaurado entre niveles
+
+ATRIBUTOS:
+- private int vida: Puntos de vida (0-100)
+- private boolean destruido: Estado de destrucción
+
+MÉTODOS PRINCIPALES:
+- void recibirDano(int cantidad): Reduce vida
+  * -10 HP por rayo
+  * -5 HP por contacto con invasor
+- void reiniciar(): Restaura vida a 100
+- boolean isDestruido(): Verifica si está destruido
+
+
+
+4.7. Espacio.java
+─────────────────
+DESCRIPCIÓN:
+Clase central del modelo. Gestiona TODA la lógica del juego.
+
+RESPONSABILIDADES:
+- Mantener lista de todos los objetos del juego
+- Actualizar posiciones cada frame
+- Detectar colisiones
+- Gestionar nivel, puntaje y vidas (créditos)
+- Controlar Game Over
+- Gestionar avance de niveles
+
+ATRIBUTOS PRINCIPALES:
+- private NaveJugador nave
+- private List<Rayo> rayos
+- private List<Invasor> invasores
+- private List<Muro> muros
+- private int velocidadInvasores
+- private int puntaje
+- private int nivel
+- private int creditos (vidas)
+- private boolean gameOver
+
+MÉTODOS CLAVE:
+- void actualizarPosiciones(): Actualiza TODO el juego cada frame
+  * Mueve rayos
+  * Mueve invasores
+  * Disparan enemigos
+  * Verifica colisiones
+  * Verifica nivel completado
+
+- void verificarColisiones(): Detecta y procesa TODAS las colisiones
+  * Rayo jugador vs Invasor: +10 puntos, ambos destruidos
+  * Rayo jugador vs Muro: -10 HP muro
+  * Rayo enemigo vs Nave: -20 HP nave
+  * Rayo enemigo vs Muro: -10 HP muro
+  * Invasor vs Muro: -5 HP muro
+  * Invasor vs Nave: Game Over
+  * Invasor toca fondo: Game Over
+
+- void avanzarNivel(): Lógica de progresión
+  * Incrementa nivel
+  * +200 puntos bonus
+  * Velocidad invasores +1
+  * Restaura todos los muros a 100 HP
+
+
+4.8. Dificultad.java (ENUM)
+────────────────────────────
+DESCRIPCIÓN:
+Enumeración que define los niveles de dificultad del juego.
+
+VALORES:
+- CADETE: Velocidad base 1 (Fácil)
+- GUERRERO: Velocidad base 2 (Medio)
+- MASTER: Velocidad base 3 (Difícil)
+
+MÉTODOS:
+- int getVelocidadBase(): Retorna la velocidad inicial de invasores
+- String getNombreCapitalizado(): Nombre para mostrar en UI
+
+
+4.9. GestorRanking.java (SINGLETON)
+────────────────────────────────────
+DESCRIPCIÓN:
+Gestor del sistema de ranking. Patrón Singleton.
+
+RESPONSABILIDADES:
+- Guardar puntajes en archivo persistente (ranking.dat)
+- Cargar puntajes al iniciar
+- Prevenir nombres duplicados
+- Mantener solo el mejor puntaje de cada jugador
+- Ordenar por puntaje descendente
+- Mantener top 10
+
+LÓGICA DE GUARDADO:
+1. Si nombre NO existe → Agregar al ranking
+2. Si nombre existe Y nuevo puntaje > anterior → Reemplazar
+3. Si nombre existe Y nuevo puntaje <= anterior → No hacer nada
+
+MÉTODOS:
+- void guardarPuntaje(Puntaje p): Guarda/actualiza puntaje
+- List<Puntaje> obtenerTop10(): Retorna mejores 10 puntajes
+
+
+4.10. Puntaje.java
+──────────────────
+DESCRIPCIÓN:
+Clase de datos para representar un puntaje del ranking.
+
+ATRIBUTOS:
+- private String nombre: Nombre del jugador
+- private int puntos: Puntaje obtenido
+
+IMPLEMENTA:
+- Comparable<Puntaje>: Para ordenamiento descendente
+- Serializable: Para persistencia en archivo
+
+
+4.11. Observador.java (INTERFACE)
+──────────────────────────────────
+DESCRIPCIÓN:
+Interfaz del patrón Observer para comunicación Modelo → Vista.
+
+MÉTODOS:
+- void mover(int x, int y): Notifica cambio de posición
+- void actualizarEstado(int vida, boolean destruido): Notifica cambio de estado
+- int getAncho(): Obtiene ancho del componente visual
+- int getAlto(): Obtiene alto del componente visual
+
+PROPÓSITO:
+Permite que el Model notifique cambios a la View SIN conocerla directamente,
+manteniendo la separación estricta del patrón MVC.
+
+
+================================================================================
+                      5. PAQUETE VISTA (vista)
+================================================================================
+
+El paquete vista contiene TODO lo relacionado con la interfaz gráfica.
+NO contiene lógica de juego. Solo presentación y captura de eventos.
+
+┌────────────────────────────────────────────────────────────────┐
+│                    COMPONENTES VISUALES                        │
+└────────────────────────────────────────────────────────────────┘
+
+PANELES PRINCIPALES:
+    PanelMenu          → Menú principal
+    PanelPrincipal     → Pantalla de juego
+    PanelDificultad    → Selección de dificultad
+    PanelGameOver      → Pantalla Game Over
+    PanelRanking       → Tabla de clasificación
+
+COMPONENTES REUTILIZABLES:
+    BotonNeon          → Botón estilizado con efecto neón
+    FondoEstrellado    → Fondo animado con estrellas
+
+OBJETOS DEL JUEGO (VISUAL):
+    ImagenNave         → Representación visual de la nave
+    ImagenInvasor      → Representación visual de invasor
+    ImagenRayo         → Rayo del jugador
+    ImagenRayoEnemigo  → Rayo enemigo
+    ImagenMuro         → Muro protector
+    ImagenObjetoJuego  → Clase base abstracta
+
+
+5.1. ImagenObjetoJuego.java (abstracta)
+────────────────────────────────────────
+DESCRIPCIÓN:
+Clase base para todos los componentes visuales de objetos del juego.
+
+RESPONSABILIDADES:
+- Extender JPanel para ser un componente Swing
+- Implementar Observador para recibir notificaciones del modelo
+- Definir estructura común de renderizado
+
+HERENCIA: extends JPanel implements Observador
+
+
+5.2. ImagenNave.java
+────────────────────
+DESCRIPCIÓN:
+Componente visual que representa la nave del jugador.
+
+CARACTERÍSTICAS:
+- Carga imagen "Navecita2.png"
+- Tamaño: 50x50 píxeles
+- Actualiza posición cuando el modelo notifica
+- Muestra barra de vida visual
+
+
+5.3. ImagenInvasor.java
+───────────────────────
+DESCRIPCIÓN:
+Componente visual que representa un invasor.
+
+CARACTERÍSTICAS:
+- Carga imagen "naveAliens.png"
+- Tamaño: 40x30 píxeles
+- Se oculta cuando es destruido
+- Animación de explosión (opcional)
+
+
+5.4. ImagenRayo.java
+────────────────────
+DESCRIPCIÓN:
+Representación visual de un disparo del jugador.
+
+CARACTERÍSTICAS:
+- Rectángulo verde brillante (4x15 píxeles)
+- Movimiento ascendente
+- Se destruye automáticamente al salir de pantalla
+
+
+5.5. ImagenRayoEnemigo.java
+────────────────────────────
+DESCRIPCIÓN:
+Representación visual de un disparo enemigo.
+
+CARACTERÍSTICAS:
+- Rectángulo rojo (4x15 píxeles)
+- Movimiento descendente
+- Se destruye al colisionar o salir de pantalla
+
+
+5.6. ImagenMuro.java
+────────────────────
+DESCRIPCIÓN:
+Representación visual de un muro protector.
+
+CARACTERÍSTICAS:
+- Carga imagen "Muro.png"
+- Tamaño: 60x40 píxeles
+- Transparencia progresiva según daño recibido
+- Tinte de color según vida (verde > amarillo > naranja > rojo)
+- Se oculta cuando es destruido
+
+
+
+5.7. PanelMenu.java
+───────────────────
+DESCRIPCIÓN:
+Panel del menú principal con estética neón.
+
+COMPONENTES:
+- Título "SPACE INVADERS" en cyan
+- Botón "JUGAR" (azul/violeta)
+- Botón "RANKING" (cyan)
+- Botón "SALIR" (rosa)
+- Fondo estrellado animado
+
+EVENTOS:
+- Recibe ActionListeners para cada botón
+- Delega acciones a Ventana (controlador de navegación)
+
+
+5.8. PanelPrincipal.java
+────────────────────────
+DESCRIPCIÓN:
+Panel principal del juego donde ocurre la acción.
+
+RESPONSABILIDADES:
+- Contener todos los componentes visuales del juego
+- Capturar eventos de teclado
+- Actualizar UI cada frame (Timer 60 FPS)
+- Mostrar puntaje, nivel, créditos, vida
+- Gestionar creación de invasores visuales
+
+COMPONENTES UI:
+- lblPuntaje: Muestra puntaje actual
+- lblNivel: Muestra nivel actual
+- lblCreditos: Muestra vidas restantes
+- lblVida: Muestra HP de la nave con color dinámico
+
+TIMER:
+- 16ms por frame (~60 FPS)
+- Llama a controller.actualizarJuego()
+- Repinta la pantalla
+
+
+5.9. PanelDificultad.java
+─────────────────────────
+DESCRIPCIÓN:
+Diálogo modal para seleccionar dificultad antes de jugar.
+
+CARACTERÍSTICAS:
+- Título "SELECCIONE DIFICULTAD" en cyan
+- Botón "CADETE" (verde) - Velocidad 1
+- Botón "GUERRERO" (azul) - Velocidad 2
+- Botón "MASTER" (rojo) - Velocidad 3
+- Descripciones de cada nivel
+- Fondo estrellado
+
+RETORNO:
+- Dificultad seleccionada
+- null si usuario cancela
+
+
+5.10. PanelGameOver.java
+────────────────────────
+DESCRIPCIÓN:
+Pantalla de Game Over con estética neón.
+
+COMPONENTES:
+- Título "GAME OVER" en rojo brillante
+- Puntaje final en cyan
+- Campo de texto para nombre (estilizado)
+- Botón "VER RANKING" (cyan)
+- Botón "MENU PRINCIPAL" (azul)
+- Botón "SALIR" (rosa)
+
+FUNCIONALIDAD:
+- Permite ingresar nombre
+- Enter para enviar
+- Guarda puntaje automáticamente
+- Retorna nombre y opción elegida
+
+
+5.11. PanelRanking.java
+───────────────────────
+DESCRIPCIÓN:
+Muestra tabla de mejores puntajes (Top 10).
+
+CARACTERÍSTICAS:
+- Título "RANKING" en cyan
+- Tabla con posición, nombre, puntaje
+- Botón "VOLVER AL MENÚ"
+- Fondo estrellado
+
+
+5.12. BotonNeon.java
+────────────────────
+DESCRIPCIÓN:
+Botón personalizado con efecto neón reutilizable.
+
+CARACTERÍSTICAS:
+- Borde redondeado con color neón personalizable
+- Efecto glow al pasar el mouse
+- Icono de nave (triángulo) aparece al hacer hover
+- Fuente "Consolas" monoespaciada
+- Cursor de mano
+
+PARÁMETROS CONSTRUCTOR:
+- String texto: Texto del botón
+- Color colorNeon: Color del efecto neón
+
+
+5.13. FondoEstrellado.java
+──────────────────────────
+DESCRIPCIÓN:
+Componente que genera un fondo animado con estrellas.
+
+FUNCIONAMIENTO:
+- Genera puntos aleatorios (estrellas)
+- Diferentes tamaños y opacidades
+- Efecto parallax (estrellas más grandes se mueven más rápido)
+- Reutilizable en todos los paneles
+
+
+================================================================================
+                   6. PAQUETE CONTROLADOR (controlador)
+================================================================================
+
+6.1. JuegoController.java
+─────────────────────────
+DESCRIPCIÓN:
+Única clase del paquete. Mediador entre View y Model.
+
+RESPONSABILIDADES:
+- Recibir eventos de la vista (teclas, clicks)
+- Invocar métodos del modelo
+- Exponer información del modelo a la vista (getters)
+- NO conoce directamente los componentes visuales
+- NO contiene lógica de juego
+
+MÉTODOS PRINCIPALES:
+
+MOVIMIENTO:
+- void moverNaveDerecha()
+- void moverNaveIzquierda()
+
+DISPARO:
+- void solicitarDisparo(Observador obs)
+
+ACTUALIZACIÓN:
+- void actualizarJuego(): Llama a espacio.actualizarPosiciones()
+
+CREACIÓN:
+- void crearInvasor(x, y, observador)
+- void inicializarMurosConObservadores(callback)
+
+INFORMACIÓN:
+- int getPuntaje()
+- int getNivel()
+- int getCreditos()
+- int getVidaNave()
+- boolean isGameOver()
+- boolean verificarNivelCompletado()
+
+PATRÓN UTILIZADO:
+Facade: Simplifica la interacción con el modelo complejo
+
+
+================================================================================
+                    7. PAQUETE PRINCIPAL (principal)
+================================================================================
+
+7.1. Principal.java
+───────────────────
+DESCRIPCIÓN:
+Punto de entrada de la aplicación.
+
+CÓDIGO:
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(() -> new Ventana());
+}
+
+RESPONSABILIDAD:
+- Iniciar la aplicación en el Event Dispatch Thread de Swing
+
+
+7.2. Ventana.java
+─────────────────
+DESCRIPCIÓN:
+Ventana principal que gestiona la navegación entre pantallas.
+
+RESPONSABILIDADES:
+- Gestionar CardLayout para cambiar entre paneles
+- Crear instancias del modelo cuando inicia el juego
+- Mostrar diálogo de dificultad antes de jugar
+- Coordinar transiciones: Menú → Juego → Ranking → Menú
+
+MÉTODOS PRINCIPALES:
+- void mostrarMenu(): Muestra menú principal
+- void mostrarJuego(): Inicia nuevo juego
+  * Muestra diálogo de dificultad
+  * Crea Espacio con dificultad seleccionada
+  * Crea Controller
+  * Crea PanelPrincipal
+- void mostrarRanking(): Muestra tabla de clasificación
+
+NAVEGACIÓN:
+    ┌─────────┐
+    │  MENÚ   │<────────────┐
+    └────┬────┘             │
+         │                  │
+         ├─> JUEGO ─────────┤
+         │                  │
+         └─> RANKING ───────┘
+
+
+
+================================================================================
+                        8. FLUJO DEL JUEGO
+================================================================================
+
+8.1. FLUJO DE INICIO
+────────────────────
+
+1. Usuario ejecuta: java -cp bin principal.Principal
+
+2. Principal.main() crea Ventana
+
+3. Ventana muestra PanelMenu
+
+4. Usuario click en "JUGAR"
+
+5. PanelDificultad.mostrarDialogo() → Usuario selecciona dificultad
+
+6. Ventana.mostrarJuego():
+   - Crea Espacio(dificultad)
+   - Crea NaveJugador
+   - Crea JuegoController
+   - Crea PanelPrincipal
+   - Muestra panel de juego
+
+7. PanelPrincipal.inicializarJuego():
+   - Crea ImagenNave y conecta con modelo
+   - Crea 15 ImagenInvasor (3 filas × 5 columnas)
+   - Crea 4 ImagenMuro en posiciones fijas
+
+8. Timer inicia (~60 FPS)
+
+
+8.2. FLUJO DEL GAME LOOP (cada 16ms)
+─────────────────────────────────────
+
+PanelPrincipal.actualizarJuego():
+    │
+    ├─> controller.actualizarJuego()
+    │        │
+    │        └─> espacio.actualizarPosiciones()
+    │                 │
+    │                 ├─> Actualizar rayos
+    │                 ├─> Mover invasores
+    │                 ├─> Disparar enemigos (random)
+    │                 ├─> Verificar colisiones
+    │                 ├─> Verificar Game Over
+    │                 └─> Verificar nivel completado
+    │
+    ├─> Actualizar labels UI (puntaje, nivel, créditos, vida)
+    │
+    └─> Si nivel completado → crearInvasores()
+
+
+8.3. FLUJO DE COLISIONES
+─────────────────────────
+
+Espacio.verificarColisiones() verifica:
+
+1. RAYOS ENEMIGOS:
+   Rayo enemigo vs Nave → nave.recibirDano(20)
+   Rayo enemigo vs Muro → muro.recibirDano(10) + destruir rayo
+
+2. RAYOS JUGADOR:
+   Rayo jugador vs Invasor → destruir ambos + puntaje += 10
+   Rayo jugador vs Muro → muro.recibirDano(10) + destruir rayo
+
+3. INVASORES:
+   Invasor vs Muro → muro.recibirDano(5)
+   Invasor vs Nave → setGameOver(true)
+   Invasor toca fondo (y > 500) → setGameOver(true)
+
+4. EFECTOS:
+   - Nave.vida <= 0 → perderCredito()
+     * Si creditos > 0 → reiniciarVida()
+     * Si creditos = 0 → setGameOver(true)
+
+
+8.4. FLUJO DE NIVEL COMPLETADO
+───────────────────────────────
+
+1. Espacio detecta: invasores.isEmpty()
+
+2. Espacio.avanzarNivel():
+   - nivel++
+   - puntaje += 200
+   - velocidadInvasores++
+   - Restaurar todos los muros a 100 HP
+
+3. Controller.verificarNivelCompletado() retorna true
+
+4. PanelPrincipal.crearInvasores():
+   - Crea 15 nuevos ImagenInvasor
+   - Controller.crearInvasor() añade al modelo
+
+
+8.5. FLUJO DE GAME OVER
+────────────────────────
+
+1. Espacio.setGameOver(true)
+
+2. Timer se detiene
+
+3. PanelGameOver.mostrarDialogo():
+   - Muestra puntaje final
+   - Usuario ingresa nombre
+   - Usuario elige: "Ver Ranking" o "Menú Principal"
+
+4. Si nombre ingresado:
+   GestorRanking.guardarPuntaje(Puntaje)
+   - Verifica si nombre existe
+   - Si nuevo puntaje > anterior → reemplaza
+   - Si nuevo puntaje <= anterior → mantiene
+
+5. Navega a Ranking o Menú según elección
+
+
+================================================================================
+                    9. CARACTERÍSTICAS PRINCIPALES
+================================================================================
+
+9.1. SISTEMA DE PUNTUACIÓN
+───────────────────────────
+- Invasor destruido: +10 puntos
+- Nivel completado: +200 puntos bonus
+- Cada 500 puntos: +1 crédito (vida extra)
+
+9.2. SISTEMA DE VIDAS (CRÉDITOS)
+─────────────────────────────────
+- Inicio: 1 crédito
+- Nave destruida (vida = 0):
+  * Si creditos > 0 → Reinicia vida, creditos--
+  * Si creditos = 0 → Game Over
+
+9.3. SISTEMA DE MUROS
+──────────────────────
+- 4 muros en posiciones fijas
+- Vida inicial: 100 HP cada uno
+- Daño: -10 por rayo, -5 por invasor
+- Se restauran a 100 HP al completar nivel
+- Se destruyen completamente si vida <= 0
+
+9.4. SISTEMA DE DISPAROS ENEMIGOS
+──────────────────────────────────
+- Probabilidad: 0.5% por invasor por frame
+- Daño a nave: 20 HP
+- Velocidad: -10 (descendente)
+- Color: Rojo
+
+9.5. PROGRESIÓN DE DIFICULTAD
+──────────────────────────────
+- Velocidad inicial: Según dificultad seleccionada
+  * CADETE: 1
+  * GUERRERO: 2
+  * MASTER: 3
+- Incremento: +1 por nivel completado
+- Los invasores se vuelven cada vez más rápidos
+
+9.6. INTERFAZ GRÁFICA
+──────────────────────
+ESTÉTICA NEÓN:
+- Colores vibrantes (cyan, azul, rosa, verde, rojo)
+- Fondo estrellado animado en todos los paneles
+- Botones con efectos hover y glow
+- Fuentes monoespaciadas (Consolas, Monospaced)
+
+RESPONSIVE:
+- Barra de vida con colores dinámicos:
+  * Verde: > 60 HP
+  * Amarillo: 30-60 HP
+  * Rojo: < 30 HP
+
+9.7. PERSISTENCIA
+──────────────────
+- Ranking guardado en: ranking.dat
+- Serialización de objetos Java
+- Top 10 mejores puntajes
+- Sin duplicados de nombres (solo mejor score)
+
+
+================================================================================
+                    10. SISTEMA DE DIFICULTAD
+================================================================================
+
+IMPLEMENTACIÓN:
+└─> Enum Dificultad con 3 niveles
+
+SELECCIÓN:
+└─> Antes de iniciar partida
+    └─> Diálogo modal personalizado (PanelDificultad)
+
+EFECTO:
+└─> Determina velocidad inicial de invasores
+    ├─> CADETE: Velocidad 1 (lento)
+    ├─> GUERRERO: Velocidad 2 (normal)
+    └─> MASTER: Velocidad 3 (rápido)
+
+INTEGRACIÓN:
+└─> Espacio(Dificultad dificultad)
+    └─> velocidadInvasores = dificultad.getVelocidadBase()
+
+CANCELACIÓN:
+└─> Si usuario cierra diálogo → Vuelve al menú
+
+
+================================================================================
+                    11. SISTEMA DE RANKING
+================================================================================
+
+11.1. ESTRUCTURA
+────────────────
+GestorRanking (Singleton)
+    │
+    ├─> List<Puntaje> puntajes (máx 10)
+    │
+    └─> ranking.dat (archivo serializado)
+
+11.2. LÓGICA ANTI-DUPLICADOS
+─────────────────────────────
+Al guardar nuevo puntaje:
+
+1. Buscar nombre (case-insensitive)
+
+2. Si NO existe:
+   ├─> Agregar al ranking
+   └─> Mensaje: "Nuevo puntaje agregado"
+
+3. Si EXISTE:
+   ├─> Comparar puntajes
+   │
+   ├─> Si nuevo > anterior:
+   │   ├─> Eliminar anterior
+   │   ├─> Agregar nuevo
+   │   └─> Mensaje: "Puntaje actualizado: X → Y"
+   │
+   └─> Si nuevo <= anterior:
+       ├─> No hacer nada
+       └─> Mensaje: "Se mantiene: X (nuevo: Y)"
+
+4. Ordenar descendente
+
+5. Limitar a Top 10
+
+6. Guardar en archivo
+
+VENTAJAS:
+- Cada jugador aparece solo UNA vez
+- Siempre con su MEJOR puntaje
+- Evita spam en el ranking
+
+
+11.3. VISUALIZACIÓN
+───────────────────
+PanelRanking muestra:
+┌───────────────────────────────┐
+│ POS │  NOMBRE  │   PUNTAJE    │
+├───────────────────────────────┤
+│  1  │  JUAN    │    5000      │
+│  2  │  MARIA   │    4500      │
+│  3  │  PEDRO   │    3800      │
+│ ... │   ...    │     ...      │
+└───────────────────────────────┘
+
+
+
+================================================================================
+                  12. COMPILACIÓN Y EJECUCIÓN
+================================================================================
+
+12.1. REQUISITOS DEL SISTEMA
+─────────────────────────────
+- Java Development Kit (JDK) 8 o superior
+- Sistema operativo: Windows, Linux, o macOS
+- Memoria RAM: Mínimo 512 MB
+- Resolución pantalla: Mínimo 800x600
+
+
+12.2. COMPILACIÓN
+─────────────────
+Desde el directorio raíz del proyecto:
+
+Windows (PowerShell):
+  javac -d bin -sourcepath src src/principal/*.java src/modelo/*.java src/vista/*.java src/controlador/*.java
+
+Linux/macOS (Terminal):
+  javac -d bin -sourcepath src src/principal/*.java src/modelo/*.java src/vista/*.java src/controlador/*.java
+
+RESULTADO:
+- Archivos .class generados en carpeta bin/
+- Estructura de paquetes preservada
+
+
+12.3. EJECUCIÓN
+───────────────
+Windows (PowerShell):
+  java -cp bin principal.Principal
+
+Linux/macOS (Terminal):
+  java -cp bin principal.Principal
+
+OPCIONAL - Crear JAR ejecutable:
+  jar -cfm SpaceInvadersMVC.jar MANIFEST.MF -C bin .
+  java -jar SpaceInvadersMVC.jar
+
+
+12.4. ESTRUCTURA DE ARCHIVOS GENERADOS
+───────────────────────────────────────
+bin/
+├── modelo/
+│   ├── Dificultad.class
+│   ├── Espacio.class
+│   ├── GestorRanking.class
+│   ├── Invasor.class
+│   ├── Muro.class
+│   ├── NaveJugador.class
+│   ├── ObjetoJuego.class
+│   ├── ObjetoJuegoActualizable.class
+│   ├── Observador.class
+│   ├── Puntaje.class
+│   └── Rayo.class
+├── vista/
+│   ├── BotonNeon.class
+│   ├── FondoEstrellado.class
+│   ├── ImagenInvasor.class
+│   ├── ImagenMuro.class
+│   ├── ImagenNave.class
+│   ├── ImagenObjetoJuego.class
+│   ├── ImagenRayo.class
+│   ├── ImagenRayoEnemigo.class
+│   ├── PanelDificultad.class
+│   ├── PanelGameOver.class
+│   ├── PanelMenu.class
+│   ├── PanelPrincipal.class
+│   └── PanelRanking.class
+├── controlador/
+│   └── JuegoController.class
+└── principal/
+    ├── Principal.class
+    └── Ventana.class
+
+
+================================================================================
+                        13. RELACIONES ENTRE CLASES
+================================================================================
+
+13.1. DIAGRAMA DE DEPENDENCIAS SIMPLIFICADO
+────────────────────────────────────────────
+
+PRINCIPAL
+    │
+    └─> Ventana
+         │
+         ├─> PanelMenu ──────────────────┐
+         ├─> PanelDificultad ────────┐   │
+         ├─> PanelRanking ──────┐    │   │
+         ├─> PanelGameOver ─┐   │    │   │
+         │                  │   │    │   │
+         └─> PanelPrincipal │   │    │   │
+              │             │   │    │   │
+              └─> JuegoController │  │   │
+                   │          │   │  │   │
+                   └─> Espacio│   │  │   │
+                        │     │   │  │   │
+                        ├─> NaveJugador  │
+                        ├─> Invasor  │   │
+                        ├─> Rayo     │   │
+                        ├─> Muro     └───┴─> GestorRanking
+                        │                        │
+                        └─> Dificultad           └─> Puntaje
+
+
+13.2. COMUNICACIÓN ENTRE CAPAS
+───────────────────────────────
+
+USER INPUT (Teclado/Mouse)
+      │
+      ▼
+ ┌────────────┐
+ │   VISTA    │  Captura eventos de usuario
+ └─────┬──────┘
+       │
+       ▼
+ ┌────────────┐
+ │ CONTROLLER │  Traduce eventos a acciones del modelo
+ └─────┬──────┘
+       │
+       ▼
+ ┌────────────┐
+ │   MODELO   │  Ejecuta lógica de juego
+ └─────┬──────┘
+       │
+       │ (Patrón Observer)
+       ▼
+ ┌────────────┐
+ │   VISTA    │  Actualiza representación visual
+ └────────────┘
+
+
+13.3. CICLO DE VIDA DE UN OBJETO DEL JUEGO
+───────────────────────────────────────────
+
+EJEMPLO: Invasor
+
+1. CREACIÓN (Vista)
+   PanelPrincipal.crearInvasores()
+   ├─> Crea ImagenInvasor (componente visual)
+   └─> Llama controller.crearInvasor(x, y, imagenInvasor)
+
+2. REGISTRO (Controller)
+   controller.crearInvasor(x, y, observador)
+   ├─> Crea Invasor(x, y, velocidad) en el modelo
+   ├─> invasor.setObservador(observador)
+   └─> espacio.agregarInvasor(invasor)
+
+3. ACTUALIZACIÓN (Modelo, cada frame)
+   espacio.actualizarPosiciones()
+   └─> invasor.actualizarPosicion()
+       └─> invasor.mover(dx, dy)
+           └─> notificarCambio()
+               └─> observador.mover(x, y)  ← AQUÍ se actualiza la Vista
+
+4. COLISIÓN (Modelo)
+   espacio.verificarColisiones()
+   └─> hayColision(rayo, invasor) == true
+       ├─> invasor.destruir()
+       │   └─> observador.actualizarEstado(0, true)  ← Notifica destrucción
+       └─> espacio.puntaje += 10
+
+5. ELIMINACIÓN (Modelo)
+   espacio.actualizarPosiciones()
+   └─> Elimina invasor de la lista
+
+6. OCULTACIÓN (Vista)
+   ImagenInvasor.actualizarEstado(vida, destruido)
+   └─> this.setVisible(false)  ← Se oculta visualmente
+
+
+================================================================================
+                         14. PATRONES DE DISEÑO
+================================================================================
+
+14.1. MVC (Model-View-Controller)
+──────────────────────────────────
+UBICACIÓN: Arquitectura completa del proyecto
+PROPÓSITO: Separar lógica, presentación y control
+BENEFICIOS: Mantenibilidad, testabilidad, escalabilidad
+
+14.2. OBSERVER (Observador)
+────────────────────────────
+UBICACIÓN: Interfaz Observador, implementada en componentes Vista
+PROPÓSITO: Notificar cambios del Modelo a la Vista sin acoplamiento
+IMPLEMENTACIÓN:
+- ObjetoJuego tiene referencia a Observador
+- Componentes visuales implementan Observador
+- notificarCambio() invoca métodos del observador
+
+14.3. SINGLETON
+───────────────
+UBICACIÓN: GestorRanking
+PROPÓSITO: Una única instancia del gestor de ranking
+IMPLEMENTACIÓN:
+- Constructor privado
+- Instancia estática
+- getInstancia() retorna la única instancia
+
+14.4. FACADE (Fachada)
+──────────────────────
+UBICACIÓN: JuegoController
+PROPÓSITO: Simplificar interacción con subsistema complejo (Espacio)
+BENEFICIOS: Vista no necesita conocer la complejidad interna del modelo
+
+14.5. TEMPLATE METHOD (parcial)
+────────────────────────────────
+UBICACIÓN: ObjetoJuegoActualizable
+PROPÓSITO: Definir estructura de actualización, delegando detalles a subclases
+IMPLEMENTACIÓN: actualizarPosicion() es abstracto
+
+
+================================================================================
+                          15. VENTAJAS DEL DISEÑO
+================================================================================
+
+15.1. SEPARACIÓN DE RESPONSABILIDADES
+──────────────────────────────────────
+✓ Modelo: Solo lógica de juego
+✓ Vista: Solo presentación
+✓ Controller: Solo coordinación
+→ Cada clase tiene un propósito claro y único
+
+15.2. MANTENIBILIDAD
+────────────────────
+✓ Cambios en UI no afectan lógica
+✓ Cambios en lógica no afectan UI
+✓ Código organizado y fácil de navegar
+→ Reducción de bugs y facilidad para agregar features
+
+15.3. TESTABILIDAD
+──────────────────
+✓ Modelo puede testearse sin UI
+✓ Vista puede testearse sin lógica compleja
+✓ Controller puede mockearse fácilmente
+→ Facilita unit testing
+
+15.4. REUTILIZACIÓN
+───────────────────
+✓ BotonNeon, FondoEstrellado: Reutilizables en todos los paneles
+✓ ObjetoJuego: Base para todos los objetos
+✓ Observador: Patrón aplicable a nuevos objetos
+→ DRY (Don't Repeat Yourself)
+
+15.5. ESCALABILIDAD
+───────────────────
+✓ Fácil agregar nuevos tipos de enemigos (extends Invasor)
+✓ Fácil agregar nuevos power-ups (extends ObjetoJuego)
+✓ Fácil cambiar motor gráfico (solo Vista cambia)
+→ Arquitectura preparada para crecer
+
+
+================================================================================
+                          16. POSIBLES MEJORAS
+================================================================================
+
+16.1. FUNCIONALIDADES
+─────────────────────
+- Power-ups (escudos, armas especiales, vida extra)
+- Jefe final cada 5 niveles
+- Diferentes tipos de invasores con comportamientos únicos
+- Invasores que cambian de formación
+- Sonidos y música
+- Efectos de partículas al destruir objetos
+- Pausa del juego
+- Configuración de controles
+
+16.2. TÉCNICAS
+──────────────
+- Sistema de eventos más robusto (Event Bus)
+- Pool de objetos para optimizar memoria
+- Multithreading para física y renderizado separados
+- Serialización del estado del juego (guardar/cargar partida)
+- Logs más detallados
+- Unit tests completos
+
+16.3. VISUALES
+──────────────
+- Animaciones más complejas
+- Shader effects
+- Parallax scrolling mejorado
+- Pantalla completa
+- Resoluciones adaptativas
+
+
+================================================================================
+                             17. CONCLUSIÓN
+================================================================================
+
+El proyecto Space Invaders MVC demuestra una implementación ESTRICTA y CORRECTA
+del patrón arquitectónico Model-View-Controller en Java Swing.
+
+LOGROS PRINCIPALES:
+
+✓ Separación completa entre capas (Modelo, Vista, Controlador)
+✓ Uso apropiado del patrón Observer para comunicación Modelo → Vista
+✓ Código organizado en paquetes semánticos
+✓ 27 clases con responsabilidades claras y únicas
+✓ Sistema de ranking con persistencia y anti-duplicados
+✓ Sistema de dificultad configurable
+✓ Interfaz gráfica coherente con estética neón
+✓ Mecánicas de juego completas y funcionales
+✓ Progresión de dificultad dinámica
+✓ Sistema de vidas y puntajes balanceado
+
+VALOR EDUCATIVO:
+
+El proyecto sirve como EJEMPLO PRÁCTICO de cómo aplicar MVC correctamente,
+evitando errores comunes como:
+- Vista accediendo directamente al Modelo
+- Lógica de juego en la Vista
+- Modelo conociendo la Vista
+- Acoplamiento entre capas
+
+Es un excelente caso de estudio para aprender:
+- Arquitectura de software
+- Patrones de diseño
+- Programación orientada a objetos
+- Desarrollo de juegos en Java
+- Swing GUI programming
+
+
+================================================================================
+                        FIN DEL INFORME TÉCNICO
+================================================================================
+
+Documento generado: 2025-11-19
+Proyecto: Space Invaders MVC
+Tecnología: Java + Swing
+Arquitectura: Model-View-Controller
+Total de clases: 27
+Líneas de código: ~3000
+
+Para más información o soporte:
+Revisar código fuente en: src/
+
+================================================================================

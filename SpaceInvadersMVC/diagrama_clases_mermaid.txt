@@ -1,0 +1,371 @@
+classDiagram
+    %% ===================================
+    %% DIAGRAMA DE CLASES - SPACE INVADERS MVC
+    %% ===================================
+
+    %% ==================== PACKAGE MODELO ====================
+    namespace modelo {
+        class ObjetoJuego {
+            <<Abstract>>
+            #int x
+            #int y
+            #int ancho
+            #int alto
+            #int velocidad
+            #int limiteX
+            #int limiteY
+            #Observador observador
+            +ObjetoJuego(int x, int y, int velocidad)
+            +setObservador(Observador observador) void
+            +setLimites(int limiteX, int limiteY) void
+            +getX() int
+            +getY() int
+            +getAncho() int
+            +getAlto() int
+            #notificarCambio() void
+        }
+
+        class ObjetoJuegoActualizable {
+            <<Abstract>>
+            +ObjetoJuegoActualizable(int x, int y, int velocidad)
+            +actualizarPosicion()* void
+        }
+
+        class NaveJugador {
+            -int vida
+            -static int VIDA_MAXIMA
+            +NaveJugador(int x, int y, int velocidad)
+            +moverDerecha() void
+            +moverIzquierda() void
+            +disparar() Rayo
+            +recibirDano(int cantidad) void
+            +getVida() int
+            +isDestruido() boolean
+            +reiniciarVida() void
+            -notificarCambioVida() void
+        }
+
+        class Invasor {
+            +Invasor(int x, int y, int velocidad)
+            +mover(int dx, int dy) void
+            +disparar() Rayo
+            +destruir() void
+        }
+
+        class Rayo {
+            -boolean activo
+            -boolean esEnemigo
+            +Rayo(int x, int y, int velocidad, boolean esEnemigo)
+            +actualizarPosicion() void
+            +isActivo() boolean
+            +setActivo(boolean activo) void
+            +isEnemigo() boolean
+            +destruir() void
+        }
+
+        class Muro {
+            -int vida
+            -boolean destruido
+            +Muro(int x, int y)
+            +recibirDano(int cantidad) void
+            +notificarCambio() void
+            +getVida() int
+            +isDestruido() boolean
+            +reiniciar() void
+        }
+
+        class Espacio {
+            -NaveJugador nave
+            -List~Rayo~ rayos
+            -List~Invasor~ invasores
+            -List~Muro~ muros
+            -int direccionInvasores
+            -int velocidadInvasores
+            -int puntaje
+            -int nivel
+            -int creditos
+            -boolean gameOver
+            -boolean esperandoRepoblacion
+            -NuevoRayoCallback nuevoRayoCallback
+            -Dificultad dificultad
+            +Espacio(Dificultad dificultad)
+            +setNuevoRayoCallback(NuevoRayoCallback callback) void
+            -inicializarMuros() void
+            +setNave(NaveJugador nave) void
+            +getNave() NaveJugador
+            +agregarInvasor(Invasor invasor) void
+            +agregarRayo(Rayo rayo) void
+            +agregarMuro(Muro muro) void
+            +getMuros() List~Muro~
+            +actualizarPosiciones() void
+            -dispararEnemigos() void
+            +perderCredito() void
+            +isInvasoresEmpty() boolean
+            +setEsperandoRepoblacion(boolean esperando) void
+            -moverInvasores() void
+            -verificarColisiones() void
+            -hayColision(ObjetoJuego obj1, ObjetoJuego obj2) boolean
+            -avanzarNivel() void
+            -verificarCreditosExtra() void
+            +getPuntaje() int
+            +getNivel() int
+            +getCreditos() int
+            +isGameOver() boolean
+            +setGameOver(boolean gameOver) void
+            +getVelocidadInvasores() int
+        }
+
+        class NuevoRayoCallback {
+            <<Interface>>
+            +onNuevoRayoEnemigo(Rayo rayo) void
+        }
+
+        class Observador {
+            <<Interface>>
+            +mover(int x, int y) void
+            +getAncho() int
+            +getAlto() int
+            +actualizarEstado(int vida, boolean destruido) void
+        }
+
+        class Dificultad {
+            <<Enumeration>>
+            CADETE
+            GUERRERO
+            MASTER
+            -int velocidadBase
+            +getVelocidadBase() int
+            +getNombreCapitalizado() String
+        }
+
+        class Puntaje {
+            -static long serialVersionUID
+            -String nombre
+            -int puntos
+            +Puntaje(String nombre, int puntos)
+            +getNombre() String
+            +getPuntos() int
+            +compareTo(Puntaje o) int
+        }
+
+        class GestorRanking {
+            -static String ARCHIVO_RANKING
+            -static GestorRanking instancia
+            -List~Puntaje~ puntajes
+            -GestorRanking()
+            +static getInstancia() GestorRanking
+            +guardarPuntaje(Puntaje nuevoPuntaje) void
+            +obtenerTop10() List~Puntaje~
+            -cargarRanking() void
+            -guardarEnArchivo() void
+        }
+    }
+
+    %% ==================== PACKAGE CONTROLADOR ====================
+    namespace controlador {
+        class JuegoController {
+            -Espacio espacio
+            +JuegoController(Espacio espacio)
+            +JuegoController(Dificultad dificultad)
+            +moverNaveDerecha() void
+            +moverNaveIzquierda() void
+            +solicitarDisparo(Observador observadorRayo) void
+            +actualizarJuego() void
+            +crearInvasor(int x, int y, Observador observador) void
+            +setObservadorNave(Observador observador) void
+            +inicializarMurosConObservadores(ObservadorMuroCallback callback) void
+            +getPuntaje() int
+            +getNivel() int
+            +getCreditos() int
+            +isGameOver() boolean
+            +getVelocidadInvasores() int
+            +getVidaNave() int
+            +setCallbackRayosEnemigos(NuevoRayoCallback callback) void
+            +verificarNivelCompletado() boolean
+        }
+
+        class ObservadorMuroCallback {
+            <<Interface>>
+            +crearObservador(int x, int y) Observador
+        }
+    }
+
+    %% ==================== PACKAGE VISTA ====================
+    namespace vista {
+        class ImagenObjetoJuego {
+            <<Abstract>>
+            +mover(int x, int y) void
+            +getAncho() int
+            +getAlto() int
+        }
+
+        class ImagenNave {
+            +ImagenNave()
+            +actualizarEstado(int vida, boolean destruido) void
+        }
+
+        class ImagenInvasor {
+            +ImagenInvasor()
+        }
+
+        class ImagenRayo {
+            +ImagenRayo()
+        }
+
+        class ImagenRayoEnemigo {
+            +ImagenRayoEnemigo()
+        }
+
+        class ImagenMuro {
+            +ImagenMuro()
+            +actualizarEstado(int vida, boolean destruido) void
+        }
+
+        class PanelPrincipal {
+            -JuegoController controller
+            -Timer timer
+            -JLabel lblPuntaje
+            -JLabel lblNivel
+            -JLabel lblCreditos
+            -JLabel lblVida
+            -FondoEstrellado fondo
+            -Runnable onShowRanking
+            -Runnable onShowMenu
+            +PanelPrincipal(JuegoController controller, Runnable onShowRanking, Runnable onShowMenu)
+            -actionPerformed(ActionEvent e) void
+            #paintComponent(Graphics g) void
+            -inicializarUI() void
+            -inicializarJuego() void
+            -crearInvasores() void
+            -inicializarEventos() void
+            -actualizarJuego() void
+            -manejarGameOver() void
+        }
+
+        class PanelMenu {
+            -Runnable onNuevoJuego
+            -Runnable onRanking
+            -Runnable onSalir
+            +PanelMenu(Runnable onNuevoJuego, Runnable onRanking, Runnable onSalir)
+        }
+
+        class PanelDificultad {
+            -Dificultad dificultadSeleccionada
+            -Consumer~Dificultad~ onConfirmar
+            -Runnable onCancelar
+            +PanelDificultad(Consumer~Dificultad~ onConfirmar, Runnable onCancelar)
+        }
+
+        class PanelRanking {
+            -Runnable onVolver
+            +PanelRanking(Runnable onVolver)
+            -cargarRanking() void
+        }
+
+        class PanelGameOver {
+            +static mostrarDialogo(Component parent, int puntaje) ResultadoGameOver
+        }
+
+        class ResultadoGameOver {
+            +String nombreJugador
+            +boolean verRanking
+            +ResultadoGameOver(String nombreJugador, boolean verRanking)
+        }
+
+        class FondoEstrellado {
+            -List~Estrella~ estrellas
+            +FondoEstrellado(int ancho, int alto)
+            +paint(Graphics g, int ancho, int alto) void
+        }
+
+        class BotonNeon {
+            -Color colorNeon
+            -Timer animacion
+            -int brillo
+            +BotonNeon(String texto)
+        }
+    }
+
+    %% ==================== PACKAGE PRINCIPAL ====================
+    namespace principal {
+        class Principal {
+            +static main(String[] args) void
+        }
+
+        class Ventana {
+            -CardLayout cardLayout
+            -JPanel contentPanel
+            -JuegoController controller
+            +Ventana()
+            -inicializarPaneles() void
+            -mostrarPanel(String nombrePanel) void
+            +setCursor(Cursor cursor) void
+        }
+    }
+
+    %% ==================== RELACIONES ====================
+
+    %% Herencia en modelo
+    ObjetoJuego <|-- ObjetoJuegoActualizable
+    ObjetoJuego <|-- NaveJugador
+    ObjetoJuego <|-- Invasor
+    ObjetoJuego <|-- Muro
+    ObjetoJuegoActualizable <|-- Rayo
+
+    %% Composición y agregación en Espacio
+    Espacio *-- NaveJugador : contiene
+    Espacio o-- Invasor : gestiona
+    Espacio o-- Rayo : gestiona
+    Espacio o-- Muro : contiene
+    Espacio ..> Dificultad : usa
+    Espacio ..> NuevoRayoCallback : usa
+
+    %% Relación de Observador
+    ObjetoJuego ..> Observador : notifica
+    Observador <|.. ImagenObjetoJuego : implementa
+
+    %% Herencia en vista
+    ImagenObjetoJuego <|-- ImagenNave
+    ImagenObjetoJuego <|-- ImagenInvasor
+    ImagenObjetoJuego <|-- ImagenRayo
+    ImagenObjetoJuego <|-- ImagenRayoEnemigo
+    ImagenObjetoJuego <|-- ImagenMuro
+
+    %% Controlador
+    JuegoController --> Espacio : gestiona
+    JuegoController ..> ObservadorMuroCallback : usa
+
+    %% Vista - Controlador
+    PanelPrincipal --> JuegoController : usa
+    PanelPrincipal *-- FondoEstrellado : contiene
+    PanelPrincipal ..> ImagenNave : crea
+    PanelPrincipal ..> ImagenInvasor : crea
+    PanelPrincipal ..> ImagenRayo : crea
+    PanelPrincipal ..> ImagenRayoEnemigo : crea
+    PanelPrincipal ..> ImagenMuro : crea
+
+    %% Ventana
+    Ventana *-- PanelMenu : contiene
+    Ventana *-- PanelDificultad : contiene
+    Ventana *-- PanelPrincipal : contiene
+    Ventana *-- PanelRanking : contiene
+    Ventana --> JuegoController : delega
+
+    %% Ranking
+    GestorRanking o-- Puntaje : gestiona
+    PanelGameOver ..> ResultadoGameOver : produce
+    PanelGameOver ..> GestorRanking : usa
+    PanelRanking ..> GestorRanking : usa
+    Puntaje ..|> Comparable : implementa
+    Puntaje ..|> Serializable : implementa
+
+    %% Principal
+    Principal ..> Ventana : inicia
+
+    %% Swing Inheritance (simplificado)
+    ImagenObjetoJuego --|> JLabel
+    PanelPrincipal --|> JPanel
+    PanelMenu --|> JPanel
+    PanelDificultad --|> JPanel
+    PanelRanking --|> JPanel
+    BotonNeon --|> JButton

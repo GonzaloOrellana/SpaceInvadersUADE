@@ -1,0 +1,168 @@
+
+================================================================================
+                    3. ESTRUCTURA DEL PROYECTO
+================================================================================
+
+SpaceInvadersMVC/
+│
+├── src/
+│   ├── modelo/              (11 clases) - Lógica del juego
+│   ├── vista/               (13 clases) - Interfaz gráfica
+│   ├── controlador/         (1 clase)   - Mediador MVC
+│   ├── principal/           (2 clases)   - Punto de entrada
+│   ├── Muro.png             - Imagen de muros
+│   ├── Navecita2.png        - Imagen de nave jugador
+│   └── naveAliens.png       - Imagen de invasores
+│
+├── bin/                     - Archivos compilados (.class)
+├── ranking.dat              - Datos persistentes del ranking
+└── SpaceInvadersMVC.jar     - Ejecutable del juego
+
+TOTAL: 27 clases Java organizadas en 4 paquetes
+
+
+================================================================================
+                      4. PAQUETE MODELO (modelo)
+================================================================================
+
+El paquete modelo contiene TODA la lógica del juego. No tiene dependencias
+de la vista ni del controlador.
+
+┌────────────────────────────────────────────────────────────────┐
+│                    JERARQUÍA DE CLASES                         │
+└────────────────────────────────────────────────────────────────┘
+
+    ObjetoJuego (abstracta)
+         │
+         ├── ObjetoJuegoActualizable (abstracta)
+         │        │
+         │        ├── Invasor
+         │        └── Rayo
+         │
+         ├── NaveJugador
+         └── Muro
+
+
+4.1. ObjetoJuego.java
+─────────────────────
+DESCRIPCIÓN:
+Clase abstracta base para todos los objetos del juego.
+
+RESPONSABILIDADES:
+- Mantener posición (x, y)
+- Mantener dimensiones (ancho, alto)
+- Mantener velocidad
+- Definir límites del área de juego
+- Notificar cambios vía patrón Observer
+
+ATRIBUTOS PRINCIPALES:
+- protected int x, y: Posición del objeto
+- protected int ancho, alto: Dimensiones
+- protected int velocidad: Velocidad de movimiento
+- protected int limiteX, limiteY: Límites del área
+- protected Observador observador: Observer para notificar vista
+
+MÉTODOS CLAVE:
+- void mover(int dx, int dy): Mueve el objeto
+- void notificarCambio(): Notifica cambios al observador
+- getX(), getY(), getAncho(), getAlto(): Getters de posición/tamaño
+
+
+4.2. ObjetoJuegoActualizable.java
+──────────────────────────────────
+DESCRIPCIÓN:
+Clase abstracta para objetos que se actualizan automáticamente cada frame.
+
+RESPONSABILIDADES:
+- Definir contrato para actualización automática
+- Gestionar estado activo/inactivo
+
+MÉTODOS ABSTRACTOS:
+- void actualizarPosicion(): Lógica de actualización (implementada por subclases)
+
+ATRIBUTOS:
+- protected boolean activo: Indica si el objeto está activo
+
+
+4.3. NaveJugador.java
+─────────────────────
+DESCRIPCIÓN:
+Representa la nave del jugador controlada por el usuario.
+
+RESPONSABILIDADES:
+- Mover izquierda/derecha dentro de los límites
+- Disparar proyectiles
+- Gestionar vida (100 HP)
+- Notificar cuando es destruida
+
+ATRIBUTOS:
+- private int vida: Puntos de vida (0-100)
+- private static final int VIDA_MAXIMA = 100
+
+MÉTODOS PRINCIPALES:
+- void moverDerecha(): Mueve la nave a la derecha
+- void moverIzquierda(): Mueve la nave a la izquierda
+- Rayo disparar(): Crea y retorna un nuevo rayo
+- void recibirDano(int cantidad): Reduce la vida
+- boolean isDestruido(): Verifica si vida <= 0
+- void reiniciarVida(): Restaura vida al máximo
+
+
+4.4. Invasor.java
+─────────────────
+DESCRIPCIÓN:
+Representa un invasor alienígena enemigo.
+
+RESPONSABILIDADES:
+- Moverse automáticamente
+- Disparar proyectiles enemigos aleatoriamente
+- Ser destruible
+
+MÉTODOS PRINCIPALES:
+- void actualizarPosicion(): Movimiento automático (vertical descendente)
+- Rayo disparar(): Crea rayo enemigo (hacia abajo)
+- void destruir(): Marca como inactivo y notifica vista
+
+
+4.5. Rayo.java
+──────────────
+DESCRIPCIÓN:
+Representa un proyectil (del jugador o enemigo).
+
+RESPONSABILIDADES:
+- Moverse verticalmente (arriba o abajo según origen)
+- Detectar cuando sale de pantalla
+- Distinguir entre rayo jugador y rayo enemigo
+
+ATRIBUTOS:
+- private boolean enemigo: true si es disparo enemigo
+- private int direccion: 1 o -1 (arriba/abajo)
+
+MÉTODOS PRINCIPALES:
+- void actualizarPosicion(): Mueve el rayo verticalmente
+- boolean isEnemigo(): Retorna si es rayo enemigo
+- void destruir(): Marca como inactivo
+
+
+4.6. Muro.java
+──────────────
+DESCRIPCIÓN:
+Representa un muro de energía protector ("tronera").
+
+RESPONSABILIDADES:
+- Recibir daño de rayos e invasores
+- Destruirse cuando vida llega a 0
+- Poder ser restaurado entre niveles
+
+ATRIBUTOS:
+- private int vida: Puntos de vida (0-100)
+- private boolean destruido: Estado de destrucción
+
+MÉTODOS PRINCIPALES:
+- void recibirDano(int cantidad): Reduce vida
+  * -10 HP por rayo
+  * -5 HP por contacto con invasor
+- void reiniciar(): Restaura vida a 100
+- boolean isDestruido(): Verifica si está destruido
+
+
