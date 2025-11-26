@@ -1,6 +1,6 @@
 package vista;
 
-import modelo.Observador;
+import controlador.ObservadorController;
 
 import javax.swing.JPanel;
 import javax.swing.ImageIcon;
@@ -10,7 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.AlphaComposite;
 
-public class ImagenMuro extends JPanel implements Observador {
+public class ImagenMuro extends JPanel implements ObservadorController {
 
     private Image imagen;
     private int vida = 100;

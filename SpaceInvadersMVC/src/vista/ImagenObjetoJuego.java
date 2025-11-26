@@ -1,9 +1,9 @@
 package vista;
 
-import modelo.Observador;
+import controlador.ObservadorController;
 import javax.swing.JLabel;
 
-public abstract class ImagenObjetoJuego extends JLabel implements Observador {
+public abstract class ImagenObjetoJuego extends JLabel implements ObservadorController {
 
     @Override
     public void mover(int x, int y) {
