@@ -15,14 +15,14 @@ public class Rayo extends ObjetoJuegoActualizable {
     public void actualizarPosicion() {
         if (activo) {
             if (esEnemigo) {
-                y += velocidad; // Enemigos disparan hacia abajo
+                y += velocidad; 
                 if (y > limiteY) {
                     activo = false;
                     x = -100;
                     y = -100;
                 }
             } else {
-                y -= velocidad; // Jugador dispara hacia arriba
+                y -= velocidad;
                 if (y < 0) {
                     activo = false;
                     x = -100;

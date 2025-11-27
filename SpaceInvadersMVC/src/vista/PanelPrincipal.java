@@ -29,7 +29,7 @@ public class PanelPrincipal extends JPanel {
         this.controller = controller;
         this.onShowRanking = onShowRanking;
         this.onShowMenu = onShowMenu;
-        this.setLayout(null); // Absolute positioning
+        this.setLayout(null);
         this.setFocusable(true);
         this.requestFocusInWindow();
 
@@ -39,7 +39,6 @@ public class PanelPrincipal extends JPanel {
         inicializarJuego();
         inicializarEventos();
 
-        // Registrar callback para rayos enemigos
         controller.setCallbackRayosEnemigos(rayo -> {
             ImagenRayoEnemigo imagenRayo = new ImagenRayoEnemigo();
             PanelPrincipal.this.add(imagenRayo);
@@ -153,12 +152,11 @@ public class PanelPrincipal extends JPanel {
 
         controller.actualizarJuego();
 
-        // Actualizar UI
+        // Actualizar 
         lblPuntaje.setText("Puntaje: " + controller.getPuntaje());
         lblNivel.setText("Nivel: " + controller.getNivel());
         lblCreditos.setText("Creditos: " + controller.getCreditos());
 
-        // Actualizar vida con color según porcentaje
         int vida = controller.getVidaNave();
         lblVida.setText("Vida: " + vida);
         if (vida > 60) {
@@ -175,7 +173,7 @@ public class PanelPrincipal extends JPanel {
     }
 
     private void manejarGameOver() {
-        // Mostrar panel de Game Over con estética del juego
+        // Mostrar panel de Game Over
         PanelGameOver.ResultadoGameOver resultado = PanelGameOver.mostrarDialogo(this, controller.getPuntaje());
 
         // Guardar puntaje si ingresó nombre
@@ -185,7 +183,6 @@ public class PanelPrincipal extends JPanel {
                     new modelo.Puntaje(resultado.nombreJugador, controller.getPuntaje()));
         }
 
-        // Mostrar ranking o volver al menú según la elección
         if (resultado.verRanking) {
             if (onShowRanking != null)
                 onShowRanking.run();

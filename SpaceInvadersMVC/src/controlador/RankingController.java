@@ -7,20 +7,9 @@ import java.util.List;
 
 public class RankingController {
 
-    private GestorRanking gestorRanking;
-
-    public RankingController() {
-        this.gestorRanking = GestorRanking.getInstancia();
-    }
-
-    /**
-     * Obtiene la lista de puntajes formateada para la vista.
-     * Evita que la vista tenga que conocer la clase Puntaje.
-     * 
-     * @return Lista de cadenas con el formato "Pos. Nombre - Puntos pts"
-     */
+    /** Obtiene la lista de puntajes formateada para la vista */
     public List<String> obtenerTop10Formateado() {
-        List<Puntaje> top10 = gestorRanking.obtenerTop10();
+        List<Puntaje> top10 = GestorRanking.getInstancia().obtenerTop10();
         List<String> resultado = new ArrayList<>();
 
         int pos = 1;
@@ -32,12 +21,8 @@ public class RankingController {
         return resultado;
     }
 
-    /**
-     * Verifica si hay puntajes registrados.
-     * 
-     * @return true si hay puntajes, false si esta vacio
-     */
+    /* Verifica si hay puntajes registrados.*/
     public boolean hayPuntajes() {
-        return !gestorRanking.obtenerTop10().isEmpty();
+        return !GestorRanking.getInstancia().obtenerTop10().isEmpty();
     }
 }

@@ -3,10 +3,6 @@ package vista;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Panel de Game Over con la misma estética del menú principal.
- * Solicita el nombre del jugador y ofrece opciones para continuar.
- */
 public class PanelGameOver extends JPanel {
 
     private FondoEstrellado fondo;
@@ -30,7 +26,7 @@ public class PanelGameOver extends JPanel {
         // Título GAME OVER
         JLabel lblGameOver = new JLabel("GAME", SwingConstants.CENTER);
         lblGameOver.setFont(new Font("Monospaced", Font.BOLD, 72));
-        lblGameOver.setForeground(new Color(255, 50, 80)); // Rojo brillante
+        lblGameOver.setForeground(new Color(255, 50, 80)); 
 
         JLabel lblOver = new JLabel("OVER", SwingConstants.CENTER);
         lblOver.setFont(new Font("Monospaced", Font.BOLD, 72));
@@ -70,29 +66,24 @@ public class PanelGameOver extends JPanel {
                 BorderFactory.createLineBorder(Color.CYAN, 2),
                 BorderFactory.createEmptyBorder(5, 10, 5, 10)));
 
-        // Permitir enviar con Enter
         txtNombre.addActionListener(e -> guardarYContinuar(true));
 
         this.add(txtNombre, gbc);
 
-        // Botones
         gbc.insets = new Insets(10, 0, 10, 0);
         gbc.ipadx = 50;
         gbc.ipady = 15;
 
-        // Botón Ver Ranking
         BotonNeon btnRanking = new BotonNeon("VER RANKING", Color.CYAN);
         btnRanking.addActionListener(e -> guardarYContinuar(true));
         gbc.gridy = 5;
         this.add(btnRanking, gbc);
 
-        // Botón Menú Principal
         BotonNeon btnMenu = new BotonNeon("MENU PRINCIPAL", new Color(100, 100, 255));
         btnMenu.addActionListener(e -> guardarYContinuar(false));
         gbc.gridy = 6;
         this.add(btnMenu, gbc);
 
-        // Botón Salir
         BotonNeon btnSalir = new BotonNeon("SALIR", new Color(255, 50, 150));
         btnSalir.addActionListener(e -> {
             guardarPuntaje();
@@ -126,27 +117,14 @@ public class PanelGameOver extends JPanel {
         }
     }
 
-    /**
-     * Obtiene el nombre ingresado por el jugador.
-     * 
-     * @return El nombre del jugador, o null si no ingresó ninguno
-     */
     public String getNombreJugador() {
         return nombreJugador;
     }
 
-    /**
-     * Indica si el jugador eligió ver el ranking.
-     * 
-     * @return true si eligió ver ranking, false si eligió ir al menú
-     */
     public boolean isVerRanking() {
         return verRanking;
     }
 
-    /**
-     * Resultado de la pantalla de Game Over.
-     */
     public static class ResultadoGameOver {
         public final String nombreJugador;
         public final boolean verRanking;
@@ -157,13 +135,6 @@ public class PanelGameOver extends JPanel {
         }
     }
 
-    /**
-     * Muestra el diálogo de Game Over.
-     * 
-     * @param parent       El componente padre
-     * @param puntajeFinal El puntaje final del jugador
-     * @return ResultadoGameOver con el nombre y la opción elegida
-     */
     public static ResultadoGameOver mostrarDialogo(Component parent, int puntajeFinal) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(parent),
                 "Game Over", true);

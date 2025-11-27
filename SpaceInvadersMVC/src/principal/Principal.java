@@ -1,5 +1,6 @@
 package principal;
 
+import vista.Ventana;
 import javax.swing.SwingUtilities;
 
 public class Principal {

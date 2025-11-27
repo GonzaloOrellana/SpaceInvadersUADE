@@ -22,7 +22,7 @@ public class Puntaje implements Comparable<Puntaje>, Serializable {
 
     @Override
     public int compareTo(Puntaje o) {
-        // Orden descendente (mayor puntaje primero)
+        //Mayor puntaje primero
         return Integer.compare(o.puntos, this.puntos);
     }
 }

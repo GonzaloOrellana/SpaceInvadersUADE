@@ -23,17 +23,8 @@ public class GestorRanking {
         return instancia;
     }
 
-    /**
-     * Guarda un nuevo puntaje en el ranking.
-     * Si el nombre ya existe:
-     * - Si el nuevo puntaje es MAYOR: reemplaza el anterior
-     * - Si el nuevo puntaje es MENOR o IGUAL: no hace nada (mantiene el existente)
-     * Esto evita duplicados y asegura que cada jugador tenga solo su mejor puntaje.
-     * 
-     * @param nuevoPuntaje El puntaje a guardar
-     */
     public void guardarPuntaje(Puntaje nuevoPuntaje) {
-        // Buscar si el nombre ya existe en el ranking
+        // Verificacion de nombre
         Puntaje puntajeExistente = null;
         for (Puntaje p : puntajes) {
             if (p.getNombre().equalsIgnoreCase(nuevoPuntaje.getNombre())) {
@@ -64,7 +55,7 @@ public class GestorRanking {
                     ": " + nuevoPuntaje.getPuntos());
         }
 
-        // Ordenar y limitar a top 10
+        // Orden y limite de top 10
         Collections.sort(puntajes);
         if (puntajes.size() > 10) {
             puntajes = new ArrayList<>(puntajes.subList(0, 10));

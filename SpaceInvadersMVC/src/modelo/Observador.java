@@ -9,6 +9,5 @@ public interface Observador {
 
     // Método para notificar cambios de estado (vida, destrucción, etc.)
     default void actualizarEstado(int vida, boolean destruido) {
-        // Implementación por defecto vacía para clases que no lo necesiten
     }
 }

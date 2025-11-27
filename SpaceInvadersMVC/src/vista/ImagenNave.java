@@ -15,7 +15,6 @@ public class ImagenNave extends ImagenObjetoJuego {
         this.setOpaque(false); // Transparente
 
         try {
-            // Cargar imagen desde el classpath (src)
             ImageIcon icon = new ImageIcon(getClass().getResource("/Navecita2.png"));
             imagen = icon.getImage();
         } catch (Exception e) {
@@ -39,17 +38,14 @@ public class ImagenNave extends ImagenObjetoJuego {
             super.paintComponent(g);
         }
 
-        // Dibujar barra de vida encima de la nave
         if (vida < 100) {
             int barWidth = getWidth();
             int barHeight = 4;
-            int barY = -6; // Encima de la nave
+            int barY = -6; 
 
-            // Fondo de la barra (negro)
             g.setColor(Color.BLACK);
             g.fillRect(0, barY, barWidth, barHeight);
 
-            // Barra de vida (color según %vida)
             int vidaWidth = (int) ((vida / 100.0) * barWidth);
             if (vida > 60) {
                 g.setColor(Color.GREEN);

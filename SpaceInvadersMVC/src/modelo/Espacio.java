@@ -16,7 +16,7 @@ public class Espacio {
 
     private int puntaje = 0;
     private int nivel = 1;
-    private int creditos = 1; // Empieza con 1 credito (vida)
+    private int creditos = 1;
 
     private boolean gameOver = false;
     private boolean esperandoRepoblacion = false;
@@ -31,19 +31,13 @@ public class Espacio {
     public void setNuevoRayoCallback(NuevoRayoCallback callback) {
         this.nuevoRayoCallback = callback;
     }
-
-    /**
-     * Constructor por defecto. Inicializa el espacio con dificultad GUERRERO.
-     */
+    
+    //Constructor. Inicializa el espacio con dificultad GUERRERO.
     public Espacio() {
         this(Dificultad.GUERRERO);
     }
 
-    /**
-     * Constructor que permite especificar la dificultad inicial.
-     * 
-     * @param dificultad La dificultad seleccionada para el juego
-     */
+    // Constructor que permite especificar la dificultad inicial.
     public Espacio(Dificultad dificultad) {
         this.rayos = new ArrayList<>();
         this.invasores = new ArrayList<>();
@@ -126,7 +120,7 @@ public class Espacio {
     }
 
     private void dispararEnemigos() {
-        // Cada invasor tiene una pequeña probabilidad de disparar cada frame
+        // probabilidad de disparar
         for (Invasor inv : invasores) {
             if (Math.random() < 0.005) { // 0.5% de probabilidad por frame
                 Rayo rayoEnemigo = inv.disparar();
@@ -144,7 +138,6 @@ public class Espacio {
     private void perderCredito() {
         creditos--;
         if (creditos > 0) {
-            // Reiniciar nave
             nave.reiniciarVida();
         } else {
             setGameOver(true);
@@ -174,7 +167,7 @@ public class Espacio {
             for (Invasor inv : invasores) {
                 inv.mover(0, 20); // Bajar
                 // Verificar si llegan muy abajo (Game Over)
-                if (inv.getY() + inv.getAlto() >= 500) { // Altura nave aprox
+                if (inv.getY() + inv.getAlto() >= 500) { // Altura nave
                     setGameOver(true);
                 }
             }
@@ -273,17 +266,6 @@ public class Espacio {
         for (Muro muro : muros) {
             muro.reiniciar();
         }
-
-        // Nota: Los invasores se agregan desde el controlador/vista al inicio del
-        // nivel.
-        // Aqui solo marcamos que el nivel termino. Pero necesitamos que el controlador
-        // se entere
-        // para crear nuevos invasores.
-        // Como el Espacio no controla el flujo de "crear objetos", esto es un problema
-        // del diseño actual.
-        // Solución: El controlador debe chequear si no hay invasores y repoblar.
-        // O el Espacio notifica evento de nivel completado.
-        // Por ahora, dejaremos que el controlador chequee el estado.
     }
 
     private void verificarCreditosExtra() {

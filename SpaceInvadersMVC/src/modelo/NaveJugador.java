@@ -25,10 +25,9 @@ public class NaveJugador extends ObjetoJuego {
     }
 
     public Rayo disparar() {
-        // El rayo sale del centro de la nave
-        int rayoX = x + (ancho / 2) - 2; // Ajuste fino para centrar
+        int rayoX = x + (ancho / 2) - 2; 
         int rayoY = y;
-        return new Rayo(rayoX, rayoY, 10, false); // Velocidad del rayo, no es enemigo
+        return new Rayo(rayoX, rayoY, 10, false); // Velocidad del rayo
     }
 
     public void recibirDano(int cantidad) {

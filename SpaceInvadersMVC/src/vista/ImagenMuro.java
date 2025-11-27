@@ -21,7 +21,6 @@ public class ImagenMuro extends JPanel implements ObservadorController {
         this.setOpaque(false); // Transparente para que se vea el fondo
 
         try {
-            // Cargar imagen desde el classpath (src)
             ImageIcon icon = new ImageIcon(getClass().getResource("/Muro.png"));
             imagen = icon.getImage();
         } catch (Exception e) {
@@ -69,24 +68,22 @@ public class ImagenMuro extends JPanel implements ObservadorController {
 
         if (imagen != null) {
             Graphics2D g2d = (Graphics2D) g.create();
-
-            // Aplicar transparencia según daño
+            
             float porcentajeVida = vida / 100.0f;
             float alpha = Math.max(0.3f, porcentajeVida); // Mínimo 30% opacidad
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
-            // Dibujar imagen
             g2d.drawImage(imagen, 0, 0, getWidth(), getHeight(), this);
 
-            // Aplicar tinte de color según vida
+            // Aplicar color según vida
             if (porcentajeVida <= 0.75) {
                 Color tintColor;
                 if (porcentajeVida > 0.5) {
-                    tintColor = new Color(255, 255, 0, 50); // Amarillo semi-transparente
+                    tintColor = new Color(255, 255, 0, 50); 
                 } else if (porcentajeVida > 0.25) {
-                    tintColor = new Color(255, 165, 0, 80); // Naranja semi-transparente
+                    tintColor = new Color(255, 165, 0, 80); 
                 } else {
-                    tintColor = new Color(255, 0, 0, 100); // Rojo semi-transparente
+                    tintColor = new Color(255, 0, 0, 100); 
                 }
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
                 g2d.setColor(tintColor);
@@ -95,7 +92,7 @@ public class ImagenMuro extends JPanel implements ObservadorController {
 
             g2d.dispose();
         } else {
-            // Fallback si no se cargó la imagen
+            //si no se cargó la imagen
             float porcentajeVida = vida / 100.0f;
             if (porcentajeVida > 0.75) {
                 g.setColor(Color.GREEN);

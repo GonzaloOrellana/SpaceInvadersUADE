@@ -6,7 +6,7 @@ public class Muro extends ObjetoJuego {
     private boolean destruido;
 
     public Muro(int x, int y) {
-        super(x, y, 0); // Velocidad 0, los muros no se mueven
+        super(x, y, 0);
         this.vida = 100;
         this.destruido = false;
     }

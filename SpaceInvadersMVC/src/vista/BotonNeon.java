@@ -24,7 +24,7 @@ public class BotonNeon extends JButton {
         this.setFocusPainted(false);
         this.setBorderPainted(false);
         this.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        this.setFont(new Font("Consolas", Font.BOLD, 24)); // Monospaced font like the image
+        this.setFont(new Font("Consolas", Font.BOLD, 24));
         this.setForeground(Color.WHITE);
 
         this.addMouseListener(new MouseAdapter() {
@@ -50,23 +50,21 @@ public class BotonNeon extends JButton {
         int width = getWidth();
         int height = getHeight();
 
-        // Background (Transparent but maybe slightly tinted on hover)
+        // Fondo
         if (hover) {
             g2.setColor(new Color(colorNeon.getRed(), colorNeon.getGreen(), colorNeon.getBlue(), 50));
             g2.fillRoundRect(0, 0, width, height, 20, 20);
         }
 
-        // Border (Neon Glow)
+        // Borde 
         g2.setColor(colorNeon);
         g2.setStroke(new java.awt.BasicStroke(3f));
         g2.drawRoundRect(2, 2, width - 5, height - 5, 20, 20);
 
-        // Text with Glow effect
+        // Texto con Glow effect
         if (hover) {
             g2.setColor(colorNeon);
 
-            // Draw Ship Indicator (Triangle)
-            // Position: Left of the text
             int textWidth = g2.getFontMetrics().stringWidth(getText());
             int textX = (width - textWidth) / 2;
 
@@ -79,11 +77,10 @@ public class BotonNeon extends JButton {
             int[] yPoints = { shipY - shipHeight / 2, shipY, shipY + shipHeight / 2 };
             g2.fillPolygon(xPoints, yPoints, 3);
 
-            // Text Glow
+            // Texto Glow
             g2.drawString(getText(), textX, height / 2 + 8);
         }
-
-        // Main Text (Centered)
+        
         g2.setColor(Color.WHITE);
         int textWidth = g2.getFontMetrics().stringWidth(getText());
         int textX = (width - textWidth) / 2;

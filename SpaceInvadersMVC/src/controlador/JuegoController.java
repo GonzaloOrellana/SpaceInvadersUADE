@@ -12,22 +12,29 @@ public class JuegoController {
 
     private Espacio espacio;
 
-    /**
-     * Constructor que acepta un objeto Espacio ya creado.
-     * 
-     * @param espacio El modelo del espacio de juego
-     */
     public JuegoController(Espacio espacio) {
         this.espacio = espacio;
     }
 
-    /**
-     * Constructor que crea un nuevo Espacio con la dificultad especificada.
-     * 
-     * @param dificultad La dificultad seleccionada para el juego
-     */
+    /* Constructor que crea un nuevo Espacio con la dificultad especificada. */
     public JuegoController(modelo.Dificultad dificultad) {
         this.espacio = new Espacio(dificultad);
+    }
+
+    /*
+     * Constructor que crea un nuevo Espacio con la dificultad especificada como
+     * String.
+     */
+    public JuegoController(String dificultadStr) {
+        modelo.Dificultad dificultad = modelo.Dificultad.valueOf(dificultadStr);
+        this.espacio = new Espacio(dificultad);
+    }
+
+    /* Método para inicializar la nave del jugador. */
+    public void inicializarNave(int x, int y, int velocidad, int limiteX, int limiteY) {
+        modelo.NaveJugador nave = new modelo.NaveJugador(x, y, velocidad);
+        nave.setLimites(limiteX, limiteY);
+        espacio.setNave(nave);
     }
 
     public void moverNaveDerecha() {
@@ -58,8 +65,6 @@ public class JuegoController {
     public void setObservadorNave(Observador observador) {
         espacio.getNave().setObservador(observador);
     }
-
-    // Nuevos metodos para exponer estado del juego a la vista
 
     public void inicializarMurosConObservadores(ObservadorMuroCallback callback) {
         List<Muro> muros = espacio.getMuros();

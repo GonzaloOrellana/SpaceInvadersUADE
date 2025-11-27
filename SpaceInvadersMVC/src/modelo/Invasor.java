@@ -13,10 +13,9 @@ public class Invasor extends ObjetoJuego {
     }
 
     public Rayo disparar() {
-        // El rayo sale del centro-abajo del invasor
         int rayoX = x + (ancho / 2) - 2;
-        int rayoY = y + alto; // Desde la parte inferior
-        return new Rayo(rayoX, rayoY, 5, true); // Velocidad 5, es enemigo
+        int rayoY = y + alto; 
+        return new Rayo(rayoX, rayoY, 5, true);
     }
 
     public void destruir() {
